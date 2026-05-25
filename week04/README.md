@@ -1,152 +1,101 @@
-# Backend VOD 학습 정리
+# Java 객체 지향 프로그래밍(OOP) 및 예외 처리 핵심 정리
 
-## 1. 클래스와 객체
+본 문서는 자바의 핵심 객체 지향 개념과 안전한 코드 작성을 위한 예외 처리 구조를 정리한 마크다운 문서입니다.
 
-Java에서 클래스는 객체를 만들기 위한 설계도 역할을 한다.  
-클래스 내부에는 객체가 가질 데이터인 필드와 객체가 수행할 동작인 메서드를 정의할 수 있다.
+---
 
-`BankAccount` 클래스에서는 은행 계좌 정보를 표현하기 위해 다음과 같은 필드를 사용한다.
+## 1. 클래스의 기본 구조와 캡슐화
+
+### 속성과 기능의 구현
+클래스는 현실 세계의 객체를 상태와 행위로 나누어 프로그램 내부로 묘사한 설계도입니다.
+* **속성 (정적인 정보):** 객체가 가지고 있는 고유한 상태나 데이터이며, 클래스 내부의 **멤버 변수(필드)**로 정의합니다.
+* **기능 (동적인 기능):** 객체가 행하는 움직임, 연산, 작용이며, 클래스 내부의 **메서드(함수)**로 구현합니다.
+
+### 데이터 보호를 위한 Getter와 Setter
+자바에서는 정보 은닉(캡슐화)을 위해 멤버 변수를 외부에서 직접 수정할 수 없도록 `private` 접근 제어자를 사용하고, 안전한 통로로 Getter와 Setter 메서드를 제공합니다.
+* **Getter:** 특정 클래스 인스턴스의 멤버 변수 값을 외부에서 **조회(Read)**할 수 있도록 반환하는 도구입니다.
+* **Setter:** 외부에서 들어온 값을 검증하거나 정제하여 멤버 변수의 값을 안전하게 **변경(Write)**하는 도구입니다.
+
+---
+
+## 2. 생성자 오버로딩 (Constructor Overloading)
+
+클래스 설계 시 인자를 아무것도 받지 않는 **기본 생성자**와 데이터를 넘겨받는 **매개변수 생성자**를 동시에 선언하는 패턴입니다.
+
+### 두 생성자가 공존해야 하는 이유
+1. **유연한 객체 생성:** 필요에 따라 우선 "빈 객체"를 만들어 두고 나중에 값을 채워야 하는 상황과, 생성과 동시에 "완전한 객체"로 초기화해야 하는 상황을 모두 대응할 수 있습니다.
+2. **백엔드 프레임워크의 기술적 요구사항:** 자바 문법상 개발자가 매개변수 생성자를 하나라도 직접 정의하면 컴파일러가 기본 생성자를 자동으로 만들어주지 않습니다. 하지만 사용하는 **JPA(Hibernate)**나 **Jackson(JSON 데이터 변환 라이브러리)** 같은 라이브러리들은 내부적으로 리플렉션(Reflection) 기술을 사용하여 **기본 생성자를 통해 객체를 먼저 가공**합니다. 따라서 실무 환경에서는 이 두 가지 생성자를 명시적으로 함께 적어주는 것이 표준 관례입니다.
 
 ```java
-int bankCode;
-int accountNo;
-String owner;
-int balance;
-boolean isDormant;
-int password;
-```
+public class BankAccount {
+    private String owner;
+    private int balance;
 
-이러한 필드는 객체가 생성되었을 때 각 객체가 가지는 상태값이 된다.  
-예를 들어 계좌 번호, 예금주, 잔액 등은 계좌 객체마다 서로 다른 값을 가질 수 있다.
+    // 1. 기본 생성자 (프레임워크 및 빈 객체 생성용)
+    public BankAccount() {}
 
-## 2. 생성자
-
-생성자는 객체가 생성될 때 자동으로 호출되는 특수한 메서드이다.  
-생성자의 이름은 클래스 이름과 동일해야 하며, 반환 타입을 작성하지 않는다.
-
-```java
-BankAccount(int bankCode, int accountNo, String owner, int balance, int password, boolean isdormant) {
-    this.bankCode = bankCode;
-    this.accountNo = accountNo;
-    this.owner = owner;
-    this.balance = balance;
+    // 2. 매개변수 생성자 (초기화 데이터 주입용)
+    public BankAccount(String owner, int balance) {
+        this.owner = owner;
+        this.balance = balance;
+    }
 }
 ```
 
-생성자는 객체를 만들 때 필요한 초기값을 전달받아 필드를 초기화하는 데 사용된다.  
-`this`는 현재 생성되는 객체 자신을 의미한다.
+---
+
+## 3. 인터페이스(Interface) 구현 시 주의점
+
+인터페이스를 클래스에서 상속받아 실제 동작을 구현(`implements`)할 때, 재정의하는 메서드 앞에는 반드시 **`public` 접근 제어자**를 붙여야 합니다.
+* **이유 (접근 제어자 자격 조건):** 인터페이스에 작성된 추상 메서드는 눈에 보이지 않더라도 내부적으로 전부 `public abstract`로 선언되어 있습니다. 자바의 오버라이딩 규칙 상, 자식 클래스는 부모 메서드보다 접근 범위를 좁혀서 구현할 수 없습니다 (`public`에서 `private` 등으로 축소 불가). 그러므로 인터페이스 구현 메서드에는 생략 없이 반드시 `public`을 명시해야 컴파일 에러가 나지 않습니다.
+
+---
+
+## 4. 예외 처리 (Try-Catch) 구조와 오류 제어 규칙
+
+### 예외 처리의 필요성
+런타임(프로그램 실행 중)에 발생할 수 있는 네트워크 장애, 잘못된 파일 접근, 연산 오류 등으로 인해 프로그램이 비정상 종료(Crash)되는 것을 막기 위해 `try-catch` 구문을 활용해 안전한 우회로를 구축합니다.
+
+### 다중 Catch 블록 설계와 최상위 Exception 배치 규칙
+하나의 `try` 블록 안에서 여러 종류의 다양한 에러가 터질 수 있는 경우, `catch`문을 여러 개 연결하여 다중 예외 처리를 할 수 있습니다. 이때 반드시 **구체적인 하위 예외를 위쪽에 먼저 배치하고, 최상위 클래스인 `Exception e`를 가장 마지막 catch문에 배치**해야 합니다.
 
 ```java
-this.bankCode = bankCode;
-```
-
-위 코드는 매개변수로 전달받은 `bankCode` 값을 현재 객체의 `bankCode` 필드에 저장한다는 의미이다.  
-필드 이름과 매개변수 이름이 같을 때 `this`를 사용하면 둘을 명확하게 구분할 수 있다.
-
-## 3. 메서드
-
-메서드는 객체가 수행할 기능을 정의하는 코드 블록이다.  
-`BankAccount` 클래스에는 계좌 조회, 입금, 출금, 휴면 계좌 처리와 관련된 메서드가 선언되어 있다.
-
-```java
-void inquiry() {}
-void deposit() {}
-void withdraw() {}
-void helpInDormant() {}
-```
-
-현재 코드에서는 메서드의 구조만 작성되어 있고 내부 기능은 구현되어 있지 않다.  
-이후 각 메서드 내부에 계좌 조회, 입금 처리, 출금 처리 등의 구체적인 로직을 작성할 수 있다.
-
-## 4. Scanner와 사용자 입력
-
-`Scanner`는 콘솔에서 사용자의 입력을 받을 때 사용하는 클래스이다.  
-회원가입 실습 코드에서는 `Scanner`를 사용해 ID, 비밀번호, 이름, 생년월일, 이메일을 입력받는다.
-
-```java
-Scanner sc = new Scanner(System.in);
-String username = sc.nextLine();
-```
-
-`nextLine()`은 사용자가 입력한 한 줄 전체를 문자열로 읽어오는 메서드이다.  
-콘솔 기반 프로그램에서 사용자와 상호작용할 때 자주 사용된다.
-
-
-## 5. 문자열 비교
-
-Java에서 문자열의 내용을 비교할 때는 `==`이 아니라 `equals()`를 사용한다.  
-`==`은 객체의 주소값을 비교하고, `equals()`는 문자열의 실제 내용을 비교한다.
-
-```java
-if (password.equals(password_confirm)) {
-    break;
+try {
+    // 에러 발생 가능성이 존재하는 코드 영역
+} catch (NullPointerException e) {
+    // 1순위 그물: 가장 구체적이고 좁은 범위의 예외 제어
+    System.out.println("참조 객체가 비어있습니다(null): " + e.getMessage());
+} catch (ArithmeticException e) {
+    // 2순위 그물: 수학적 연산 오류 제어
+    System.out.println("0으로 숫자를 나눌 수 없습니다.");
+} catch (Exception e) {
+    // 마지막 순위 그물: 예측하지 못한 모든 나머지 예외를 한 번에 잡는 최상위 방어벽
+    System.out.println("시스템에 알 수 없는 예외가 발생했습니다.");
 }
 ```
 
-`equalsIgnoreCase()`는 대소문자를 구분하지 않고 문자열을 비교하는 메서드이다.
+* **규칙의 핵심 이유:** 자바의 모든 예외 클래스들은 상속 구조를 가지고 있으며, `Exception` 클래스는 모든 예외의 최상위 부모입니다. 다중 catch 구조는 위에서부터 순서대로 조건을 비교하며 내려옵니다. 만약 가장 상단에 `catch (Exception e)`를 배치해 버리면 모든 예외가 첫 번째 그물에서 전부 걸려버리기 때문에, 아래에 작성된 세부적인 예외 처리 코드들이 실행될 기회를 잃어 컴파일 에러가 발생합니다.
+
+---
+
+## 5. 실무에서 가장 자주 마주치는 핵심 오류 제어자 종류
+
+| 예외 클래스 명 | 구체적인 발생 상황 및 제어 목적 |
+| :--- | :--- |
+| **`NullPointerException`** | 객체 인스턴스가 생성되지 않아 주소값이 없는 상태(`null`)인 변수의 메서드나 필드를 호출할 때 발생 |
+| **`IllegalArgumentException`** | 메서드가 요구하는 매개변수 조건에 맞지 않는 잘못되었거나 부적절한 인자(Argument)를 전달했을 때 발생 |
+| **`IndexOutOfBoundsException`** | 배열(`Array`)이나 리스트(`List`) 등 자료구조에서 선언된 크기 범위를 초과한 인덱스로 데이터를 호출할 때 발생 |
+| **`ArithmeticException`** | 정수를 0으로 나누는 연산 등 수학적 계산 규칙에서 허용되지 않는 잘못된 연산을 수행할 때 발생 |
+| **`IOException`** | 파일 쓰기/읽기, 서버 데이터 송수신 등 외부 인프라와의 입출력 시스템 처리 과정에서 신호 오류가 생겼을 때 발생 |
+
+### 코드 압축을 위한 Multi-Catch 블록 (Java 7 이상)
+종류가 다른 예외가 발생하더라도 내부 처리 로직이나 가이드 메시지가 동일하다면, `|` 기호를 사용하여 한 줄의 catch문으로 묶어 코드를 줄일 수 있습니다.
 
 ```java
-if (register_input.equalsIgnoreCase("y")) {
-    ...
+try {
+    // 비즈니스 로직 실행
+} catch (NullPointerException | IllegalArgumentException e) {
+    // 두 종류의 예외 중 하나만 터져도 이 블록 하나에서 공통 처리 가능
+    System.out.println("요청 데이터 접근 처리 실패: " + e.getMessage());
 }
-```
-
-이를 사용하면 사용자가 `y`, `Y`처럼 대소문자를 다르게 입력해도 같은 값으로 처리할 수 있다.
-
-
-
-## 6. HashMap
-
-`HashMap`은 key-value 형태로 데이터를 저장하는 자료구조이다.  
-하나의 key에 하나의 value를 연결하여 저장할 수 있기 때문에 회원 정보처럼 여러 속성을 가진 데이터를 관리할 때 사용할 수 있다.
-
-```java
-HashMap user = new HashMap();
-
-user.put("username", username);
-user.put("password", password);
-user.put("name", name);
-user.put("birth_date", birth_date);
-user.put("email", email);
-```
-
-`put()`은 데이터를 저장할 때 사용하고, `get()`은 key를 이용해 저장된 값을 가져올 때 사용한다.
-
-```java
-user.get("name");
-```
-
-즉, `HashMap`을 사용하면 하나의 회원 정보를 `username`, `password`, `name`, `birth_date`, `email`과 같은 key로 구분해서 저장할 수 있다.
-
-
-## 7. 추가로 정리한 내용
-
-현재 코드에서는 `ArrayList`와 `HashMap`을 제네릭 없이 사용하고 있다.
-
-```java
-ArrayList users = new ArrayList();
-HashMap user = new HashMap();
-```
-
-Java에서는 타입 안정성을 높이기 위해 제네릭을 사용하는 것이 좋다.
-
-```java
-ArrayList<HashMap<String, String>> users = new ArrayList<>();
-HashMap<String, String> user = new HashMap<>();
-```
-
-제네릭을 사용하면 리스트와 맵에 어떤 타입의 데이터가 들어가는지 명확하게 표현할 수 있다.  
-또한 잘못된 타입의 데이터가 들어가는 것을 컴파일 단계에서 방지할 수 있다.
-
-그리고 회원가입 완료 메시지에서 ID를 출력하는 부분은 다음과 같이 작성되어 있다.
-
-```java
-user.get("userr")
-```
-
-하지만 회원 ID는 `"username"`이라는 key로 저장했기 때문에 `"userr"`로 조회하면 원하는 값이 출력되지 않는다.  
-따라서 다음과 같이 수정하는 것이 적절하다.
-
-```java
-user.get("username")
 ```
