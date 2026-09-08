@@ -1,0 +1,64 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class list {
+    private String content;
+    private long id;
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public void Todo(long id, String content) {
+        this.id = id;
+        this.content = content;
+    }
+
+    public void run() {
+        System.out.println("할 일 관리 앱, 시작");
+        try (Scanner sc = new Scanner(System.in)) {
+            long todoLastId = 0;
+            List<Todo> todoList = new ArrayList<>();
+            while (true) {
+                System.out.print("명령) ");
+                String cmd = sc.nextLine().trim();
+
+                if (cmd.equals("exit")) break;
+                else if (cmd.equals("add")) {
+                    long id = todoLastId + 1;
+                    System.out.print("할일: ");
+                    String content = sc.nextLine().trim();
+
+
+                    Todo todo = new Todo(id, content);
+                    todos.add(todo);
+                    todoLastId++;
+
+                    System.out.printf("%d번 할일이 생성되었습니다.\n", id);
+
+                } else if (cmd.equals("list")) {
+                    System.out.println("번호/내용");
+
+                    for(Todo todo : todos) {
+                        System.out.printf("%d / %s\n", todo.getId(), todo.getContent());
+                    }
+                    todos.forEach(todo-> System.out.printf("%d / %s\n", todo.getId(), todo.getContent()));
+                    }
+                }
+            }
+
+        }
+    }
