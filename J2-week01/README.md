@@ -248,4 +248,4 @@ public Todo createTodo(@RequestBody Todo todo) {
 - `removeIf()`를 이용해 조건을 만족하는 리스트 요소를 간단하게 삭제하는 방법
 - `stream()`, `filter()`, `findFirst()`, `orElse()`를 조합해 원하는 객체를 찾는 방법
 - Controller가 HTTP 요청을 받아 CRUD 기능과 연결하는 역할을 한다는 점
-- `@GetMapping`, `@PostMapping`, `@PathVariable`, `@RequestBody` 등의 기본적인 Controller 사용 방법
+- `@GetMapping`, `@PostMapping`, `@PathVariable`, `@RequestBody` 등의 기본적인 Controller 사용 방법 -
